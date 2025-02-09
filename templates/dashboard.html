@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snake Game - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            font-size: 2.5em;
+            margin: 40px 0;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .play-button {
+            background: #00ff00;
+            color: #000;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 40px;
+            max-height: 500px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 rgba(0, 255, 0, 0.1);
+        }
+
+        .leaderboard::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .leaderboard::-webkit-scrollbar-track {
+            background: rgba(0, 255, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .leaderboard::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 4px;
+        }
+
+        .scores {
+            width: 100%;
+            border-collapse: collapse;
+            position: relative;
+        }
+
+        .scores thead {
+            position: sticky;
+            top: 0;
+            background: #1a1a1a;
+            z-index: 1;
+        }
+
+        .scores th, .scores td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .scores th {
+            color: #00ff00;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .scores tr:hover {
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .total-players {
+            text-align: center;
+            color: #00ff00;
+            margin-top: 20px;
+            font-size: 0.8em;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        .medal {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+
+        .rank-1 { color: gold; text-shadow: 0 0 10px gold; }
+        .rank-2 { color: silver; text-shadow: 0 0 10px silver; }
+        .rank-3 { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; }
+
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px #00ff00; }
+            50% { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+            100% { text-shadow: 0 0 10px #00ff00; }
+        }
+
+        .title {
+            animation: glow 2s infinite;
+        }
+
+        .loading {
+            color: #00ff00;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        .error-message {
+            color: #ff0000;
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .retry-button {
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Snake Game</h1>
+        
+        <div class="menu">
+            <div>
+                <input type="text" id="playerName" placeholder="Enter your name" 
+                    maxlength="50"
+                    pattern="[A-Za-z0-9 ]+"
+                    title="Only letters, numbers and spaces allowed"
+                    required>
+            </div>
+            <a href="/game" class="play-button" onclick="return validateAndSetPlayer()">PLAY GAME</a>
+        </div>
+
+        <div class="leaderboard">
+            <h2>High Scores</h2>
+            <div id="loading" class="loading">Loading scores...</div>
+            <div id="error" class="error-message" style="display: none">
+                <p>Failed to load scores</p>
+                <button class="retry-button" onclick="loadScores()">Retry</button>
+            </div>
+            <table class="scores">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="scoresTable">
+                </tbody>
+            </table>
+        </div>
+        <div class="total-players" id="totalPlayers"></div>
+    </div>
+
+    <script>
+        const medals = {
+            1: '🥇',
+            2: '🥈',
+            3: '🥉'
+        };
+
+        async function loadScores() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const scoresTable = document.getElementById('scoresTable');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            scoresTable.innerHTML = '';
+
+            try {
+                const [scoresResponse, playersResponse] = await Promise.all([
+                    fetch('/top_scores'),
+                    fetch('/total_players')
+                ]);
+
+                if (!scoresResponse.ok || !playersResponse.ok) {
+                    throw new Error('Server error');
+                }
+
+                const scores = await scoresResponse.json();
+                const playerCount = await playersResponse.json();
+
+                scores.forEach((score, index) => {
+                    const row = document.createElement('tr');
+                    const date = new Date(score.date).toLocaleDateString();
+                    const rankText = medals[index + 1] ? 
+                        `<span class="medal rank-${index + 1}">${medals[index + 1]}</span>${index + 1}` : 
+                        index + 1;
+                    
+                    row.innerHTML = `
+                        <td>${rankText}</td>
+                        <td>${escapeHtml(score.player_name)}</td>
+                        <td>${score.score}</td>
+                        <td>${date}</td>
+                    `;
+                    if (index < 3) {
+                        row.style.fontWeight = 'bold';
+                    }
+                    scoresTable.appendChild(row);
+                });
+
+                document.getElementById('totalPlayers').textContent = 
+                    `Total Unique Players: ${playerCount}`;
+                
+                loading.style.display = 'none';
+            } catch (err) {
+                console.error('Error loading data:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        function validateAndSetPlayer() {
+            const playerName = document.getElementById('playerName').value.trim();
+            // Remove any HTML tags that might be injected
+            const sanitizedName = playerName.replace(/<[^>]*>/g, '');
+            
+            if (!sanitizedName) {
+                alert('Please enter your name!');
+                return false;
+            }
+            if (!/^[A-Za-z0-9 ]+$/.test(sanitizedName)) {
+                alert('Name can only contain letters, numbers, and spaces');
+                return false;
+            }
+            if (sanitizedName.length > 50) {
+                alert('Name is too long (maximum 50 characters)');
+                return false;
+            }
+            if (sanitizedName !== playerName) {
+                alert('Invalid characters were removed from your name');
+            }
+            localStorage.setItem('playerName', sanitizedName);
+            return true;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Load scores when page loads
+        document.addEventListener('DOMContentLoaded', loadScores);
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+pygame==2.6.1
+flask==3.1.0
+flask-socketio==5.5.1
+flask-cors==4.0.0
+python-dotenv==1.0.0
+Flask-Limiter[redis]==3.5.0
+redis==5.0.1
+limits==4.0.1
+typing-extensions==4.12.2
+ordered-set==4.1.0
+rich==13.9.4
+deprecated==1.2.18
+packaging==24.2
+pygments==2.19.1
+markdown-it-py==3.0.0
+mdurl==0.1.2
+wrapt==1.17.2

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snake Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <div id="controls">
+        Use arrow keys to control the snake<br>
+        Collect red food to grow
+    </div>
+
+    <div id="gameOver">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button class="button" onclick="window.game.restart()">Play Again</button>
+        <button class="button" onclick="window.location.href='/'">Back to Dashboard</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/snake.js') }}"></script>
+</body>
+</html>
